@@ -30,8 +30,8 @@ def cosine_sim(a,b):
 parser = argparse.ArgumentParser(description='PyTorch Implementation')
 
 parser.add_argument('--target', type=str, default='ArtPainting', metavar='N', help='target dataset')
-parser.add_argument('--path_to_txt', type=str,default='/.../DomainToText_AMLProject/data/PACS', help='path to the txt files')
-parser.add_argument('--path_to_dataset', type=str, default='/.../DomainToText_AMLProject/',help='path to the dataset')
+parser.add_argument('--path_to_txt', type=str,default='/content/AML_project/data/PACS', help='path to the txt files')
+parser.add_argument('--path_to_dataset', type=str, default='/content/AML_project/',help='path to the dataset')
 parser.add_argument('--num_classes', type=int, default=7, help='size for the crop')
 parser.add_argument('--gpu', type=int, default=0,help='gpu index')
 args = parser.parse_args()
@@ -57,8 +57,8 @@ def main():
     G1 = Generator().cuda()
     # Object Classifier
     C1 = Standard_Classifier(args).cuda()
-    G1.load_state_dict(torch.load('outputs/SingleSource_'+sources[0] + '/G.pkl'))
-    C1.load_state_dict(torch.load('outputs/SingleSource_'+sources[0] + '/C.pkl'))
+    G1.load_state_dict(torch.load('/content/AML_project/outputs/SingleSource_'+sources[0] + '/G.pkl'))
+    C1.load_state_dict(torch.load('/content/AML_project/outputs/SingleSource_'+sources[0] + '/C.pkl'))
 
     print('Model of %s loaded ' % (sources[0]))
 
@@ -71,8 +71,8 @@ def main():
     G2 = Generator().cuda()
     # Object Classifier
     C2 = Standard_Classifier(args).cuda()
-    G2.load_state_dict(torch.load('outputs/SingleSource_'+sources[1] + '/G.pkl'))
-    C2.load_state_dict(torch.load('outputs/SingleSource_'+sources[1] + '/C.pkl'))
+    G2.load_state_dict(torch.load('/content/AML_project/outputs/SingleSource_'+sources[1] + '/G.pkl'))
+    C2.load_state_dict(torch.load('/content/AML_project/outputs/SingleSource_'+sources[1] + '/C.pkl'))
 
     print('Model of %s loaded ' % (sources[1]))
 
@@ -86,8 +86,8 @@ def main():
     # Object Classifier
     C3 = Standard_Classifier(args).cuda()
 
-    G3.load_state_dict(torch.load('outputs/SingleSource_'+sources[2] + '/G.pkl'))
-    C3.load_state_dict(torch.load('outputs/SingleSource_'+sources[2] + '/C.pkl'))
+    G3.load_state_dict(torch.load('/content/AML_project/outputs/SingleSource_'+sources[2] + '/G.pkl'))
+    C3.load_state_dict(torch.load('/content/AML_project/outputs/SingleSource_'+sources[2] + '/C.pkl'))
     print('Model of %s loaded ' % (sources[2]))
 
     G3.eval()
@@ -97,7 +97,7 @@ def main():
     ########################### Computation of sources domain embeddings
     vec_dim = 256
     resnet101_texture_model = TripletMatch(vec_dim=vec_dim,distance='cos', img_feats=(2, 4))
-    model_path = 'outputs/triplet_match/BEST_checkpoint.pth'
+    model_path = '/content/AML_project/outputs/triplet_match/BEST_checkpoint.pth'
 
     resnet101_texture_model = resnet101_texture_model.cuda()
     resnet101_texture_model.load_state_dict(torch.load(model_path), strict=False)
