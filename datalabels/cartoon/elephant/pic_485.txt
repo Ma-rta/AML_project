@@ -1,0 +1,9 @@
+high-level
+definite lines
+mid
+yes, grayscale
+white
+yes
+yes, dense
+yes, cartoon
+no, unrealistic

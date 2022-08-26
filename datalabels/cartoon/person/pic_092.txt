@@ -1,0 +1,9 @@
+low-level
+definite bold black lines
+high
+no
+purple
+yes
+no
+yes, cartoon
+no, unrealistic
