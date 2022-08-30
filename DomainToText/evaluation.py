@@ -101,7 +101,7 @@ def compute_mAP(match_scores, gt_matrix, mode='i2p'):
     return mean_average_precision(retrieve_binary_lists)
 
 def predict(out_img, out_txt, valset):
-    match_scores = np.zeros((len(valset), valset))
+    match_scores = np.zeros((len(valset), len(valset)))
     for i, img in enumerate(out_img):
         for j, phr in enumerate(out_txt):
             match_scores[i,j] = - np.sum(np.power(img - phr, 2)) # l2_s
@@ -112,7 +112,7 @@ def do_eval (model, valset):
     out_img = model.img_encoder(valset.t_images.cuda()).cpu().numpy()
     out_txt = model.lang_encoder(valset.descr).cpu().numpy()
     gt_matrix = np.eye(len(valset))
-    match_scores = predict(out_img, out_txt, len(valset))
+    match_scores = predict(out_img, out_txt, valset)
 
     i2p_result = compute_mAP(match_scores, gt_matrix, mode='i2p')
     p2i_result = compute_mAP(match_scores, gt_matrix, mode='p2i') 
