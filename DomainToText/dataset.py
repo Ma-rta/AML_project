@@ -1,11 +1,6 @@
-import os
 import torch
 import torch.utils.data
-from torch.utils.tensorboard import SummaryWriter
 import torchvision.transforms as transforms
-from model.triplet_match.model import TripletMatch
-from torch.utils.data import DataLoader
-import numpy as np
 from PIL import Image
 import random
 
@@ -24,7 +19,6 @@ def build_transforms(is_train=True):
             transforms.CenterCrop(224),
             transforms.ToTensor(),
             normalize])
-
 
 class TrainDataset(torch.utils.data.Dataset):
     def __init__(self, sample_list, images_path='/content/AML_project/PACS/kfold/', annotations_path='/content/AML_project/datalabels/'):
@@ -77,7 +71,7 @@ class EvalDataset(torch.utils.data.Dataset): # both for validation, test -> retu
        return len(self.images)
 
 static_idx_counter = 0
-def generate_minibatch(model, trainset, batch_size):
+def random_batch(model, trainset, batch_size):
         global static_idx_counter
         # Random selection
         imgs = []

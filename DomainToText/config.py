@@ -1,25 +1,18 @@
-import os
-import torch
-import torch.utils.data
-from torch.utils.tensorboard import SummaryWriter
-import torchvision.transforms as transforms
-from model.triplet_match.model import TripletMatch
-from torch.utils.data import DataLoader
-import numpy as np
-from PIL import Image
-import random
+from yacs.config import CfgNode as CN
 
+C = CN()
 
-    batch_size=16
-    val_every=20
+C.TRAIN = CN()
+C.TRAIN.MAX_EPOCH = 250
+C.TRAIN.BATCH_SIZE = 16
+C.TRAIN.EVAL_EVERY_EPOCH = 20
+C.TRAIN.WEIGHT_DECAY = 1e-6
+C.TRAIN.INIT_LR = 0.0001
+C.TRAIN.LR_DECAY_GAMMA = 0.1
+C.TRAIN.LR_DECAY_EVAL_COUNT = 10
+C.TRAIN.EARLY_STOP_EVAL_COUNT = 40
 
-    init_lr=0.00001 
-    lr_decay_gamma = 0.1
-    lr_decay_eval_count = 10
-
-    weight_decay = 1e-6
-    alpha = 0.8
-    beta = 0.999
-    epsilon = 1e-8
-
-   
+C.TRAIN.ADAM = CN()
+C.TRAIN.ADAM.ALPHA = 0.8
+C.TRAIN.ADAM.BETA = 0.999
+C.TRAIN.ADAM.EPSILON = 1e-8

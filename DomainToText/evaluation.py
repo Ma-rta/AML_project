@@ -1,13 +1,4 @@
-import os
-import torch
-import torch.utils.data
-from torch.utils.tensorboard import SummaryWriter
-import torchvision.transforms as transforms
-from model.triplet_match.model import TripletMatch
-from torch.utils.data import DataLoader
 import numpy as np
-from PIL import Image
-import random
 
 def precision_at_k(r, k):
     """Score is precision @ k
@@ -109,22 +100,21 @@ def compute_mAP(match_scores, gt_matrix, mode='i2p'):
     # calculate mAP
     return mean_average_precision(retrieve_binary_lists)
 
-def predict(out_img, out_txt, len(valset)):
+def predict(out_img, out_txt, valset):
     match_scores = np.zeros((len(valset), len(valset)))
-        for i, img in enumerate(out_img):
-            for j, phr in enumerate(out_txt):
-                match_scores[i,j] = - np.sum(np.power(img - phr, 2)) # l2_s
+    for i, img in enumerate(out_img):
+        for j, phr in enumerate(out_txt):
+            match_scores[i,j] = - np.sum(np.power(img - phr, 2)) # l2_s
     return match_scores
                 
 
 def do_eval (model, valset):
-    with torch.no_grad():
-        out_img = model.img_encoder(valset.t_images.cuda()).cpu().numpy()
-        out_txt = model.lang_encoder(valset.descr).cpu().numpy()
-        gt_matrix = np.eye(len(valset))
-        match_scores = predict(out_img, out_txt, len(valset))
+    out_img = model.img_encoder(valset.t_images.cuda()).cpu().numpy()
+    out_txt = model.lang_encoder(valset.descr).cpu().numpy()
+    gt_matrix = np.eye(len(valset))
+    match_scores = predict(out_img, out_txt, len(valset))
 
-        i2p_result = compute_mAP(match_scores, gt_matrix, mode='i2p')
-        p2i_result = compute_mAP(match_scores, gt_matrix, mode='p2i') 
+    i2p_result = compute_mAP(match_scores, gt_matrix, mode='i2p')
+    p2i_result = compute_mAP(match_scores, gt_matrix, mode='p2i') 
     return i2p_result, p2i_result
 

@@ -2,37 +2,40 @@ import os
 import torch
 import torch.utils.data
 from torch.utils.tensorboard import SummaryWriter
-import torchvision.transforms as transforms
 from model.triplet_match.model import TripletMatch
 from torch.utils.data import DataLoader
 import numpy as np
-from PIL import Image
-import random
 
-import dataset 
-import eval
+from DomainToText.config import C as cfg
+from DomainToText.dataset import TrainDataset, EvalDataset, random_batch
+from DomainToText.evaluation import do_eval
 
+def train_val_test_split(annotations_path, train_pctg=0.6, val_pctg=0.2, test_pctg=0.2):
+    assert np.isclose(train_pctg + val_pctg + test_pctg, 1.0)
+    train_txt, val_txt, test_txt = [], [], []
+    _, visual_domains, _ = next(os.walk(annotations_path))
+    for domain in visual_domains:
+        _, categories, _ = next(os.walk(annotations_path + domain))
+        for cat in categories:
+            _, _, files = next(os.walk(annotations_path + domain + '/' + cat))
+            N = len(files)
+            Ntrain, Nval = np.floor(N * train_pctg), np.ceil(N * val_pctg)
+            Nval += Ntrain
+            for i, file in enumerate(files):
+                if i < Ntrain: train_txt.append(domain + '/' + cat + '/' + file)
+                elif i < Nval: val_txt.append(domain + '/' + cat + '/' + file)
+                else: test_txt.append(domain + '/' + cat + '/' + file)
+    return train_txt, val_txt, test_txt
 
 def train(use_tensorboard=True):
-    batch_size=16
-    val_every=20
-
-    init_lr=0.00001
-    lr_decay_gamma = 0.1
-    lr_decay_eval_count = 10
-
-    weight_decay = 1e-6
-    alpha = 0.8
-    beta = 0.999
-    epsilon = 1e-8
-
+ 
     train_list, val_list, _ = train_val_test_split('/content/AML_project/datalabels/')
     if use_tensorboard: writer = SummaryWriter()
 
     trainset = TrainDataset(train_list)
     valset = EvalDataset(val_list)
 
-    data_loader = DataLoader(valset, batch_size, shuffle=True, drop_last=True, pin_memory=True)
+    data_loader = DataLoader(valset, cfg.TRAIN.BATCH_SIZE, shuffle=True, drop_last=True, pin_memory=True)
 
     model = TripletMatch()
     model.cuda()
@@ -42,14 +45,14 @@ def train(use_tensorboard=True):
     elif not os.path.exists('./metric_learning'):
         os.mkdir('./metric_learning')
 
-    optimizer = torch.optim.Adam(model.parameters(), lr=init_lr, weight_decay=weight_decay, betas=(alpha, beta), eps=epsilon)
+    optimizer = torch.optim.Adam(model.parameters(), lr=cfg.TRAIN.INIT_LR, weight_decay=cfg.TRAIN.WEIGHT_DECAY, betas=(cfg.TRAIN.ADAM.ALPHA, cfg.TRAIN.ADAM.BETA),eps=cfg.TRAIN.ADAM.EPSILON)
 
     best_eval_metric = 0
     best_eval_count = 0
     it = 0
-    while it<250:
+    while it<cfg.TRAIN.MAX_EPOCH:
         # Train
-        pos_images, pos_phrase, neg_images, neg_phrase = generate_minibatch(model, trainset, batch_size)
+        pos_images, pos_phrase, neg_images, neg_phrase = random_batch(model, trainset, cfg.TRAIN.BATCH_SIZE)
 
         neg_img_loss, neg_sent_loss = model(pos_images.cuda(), pos_phrase, neg_images.cuda(), neg_phrase)
         loss = neg_img_loss + neg_sent_loss
@@ -59,7 +62,8 @@ def train(use_tensorboard=True):
         loss.backward()
         optimizer.step()
         # Validation
-        if it % val_every == val_every-1:
+        if it % cfg.TRAIN.EVAL_EVERY_EPOCH == cfg.TRAIN.EVAL_EVERY_EPOCH-1:
+            with torch.no_grad:
                 i2p_result, p2i_result = do_eval(model, valset)
                 eval_metric = i2p_result + p2i_result
                    
@@ -92,20 +96,10 @@ def test():
     if os.path.exists('/metric_learning/BEST_checkpoint.pth'):
         model.load_state_dict(torch.load('/metric_learning/BEST_checkpoint.pth'), strict=False)
 
-    with torch.no_grad():
-        out_img = model.img_encoder(testset.t_images.cuda()).cpu().numpy()
-        out_txt = model.lang_encoder(testset.descr).cpu().numpy()
-        match_scores = np.zeros((len(testset), len(testset)))
-        gt_matrix = np.eye(len(testset))
-        for i, img in enumerate(out_img):
-            for j, phr in enumerate(out_txt):
-                match_scores[i,j] = - np.sum(np.power(img - phr, 2)) # l2_s
+    i2p_result, p2i_result = do_eval(model, testset)
+    eval_metric = i2p_result + p2i_result
 
-        mAP_i2p = compute_mAP(match_scores, gt_matrix, mode='i2p')
-        mAP_p2i = compute_mAP(match_scores, gt_matrix, mode='p2i') 
-
-        eval_metric = mAP_i2p + mAP_p2i
-        print(f'mAP on test set: {eval_metric:.3f}')
+    print(f'mAP on test set: {eval_metric:.3f}')
 
 if __name__ == '__main__':
     train()
