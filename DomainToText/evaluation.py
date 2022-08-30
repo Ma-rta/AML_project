@@ -101,7 +101,7 @@ def compute_mAP(match_scores, gt_matrix, mode='i2p'):
     return mean_average_precision(retrieve_binary_lists)
 
 def predict(out_img, out_txt, valset):
-    match_scores = np.zeros((len(valset), len(valset)))
+    match_scores = np.zeros((len(valset), valset))
     for i, img in enumerate(out_img):
         for j, phr in enumerate(out_txt):
             match_scores[i,j] = - np.sum(np.power(img - phr, 2)) # l2_s

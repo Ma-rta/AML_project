@@ -63,23 +63,23 @@ def train(use_tensorboard=True):
         optimizer.step()
         # Validation
         if it % cfg.TRAIN.EVAL_EVERY_EPOCH == cfg.TRAIN.EVAL_EVERY_EPOCH-1:
-            with torch.no_grad:
+            with torch.no_grad():
                 i2p_result, p2i_result = do_eval(model, valset)
                 eval_metric = i2p_result + p2i_result
                    
                 if eval_metric > best_eval_metric:
-                    print('best eval_metric',eval_metric)
+                    print('best eval_metric',eval_metric, it)
                     best_eval_metric = eval_metric
                     best_eval_count = 0
                     torch.save(model.state_dict(), 'metric_learning/BEST_checkpoint.pth')
                 else:
-                    print('last eval_metric',eval_metric)
+                    print('last eval_metric',eval_metric, it)
                     best_eval_count += 1
                     torch.save(model.state_dict(), 'metric_learning/LAST_checkpoint.pth')
 
-                if best_eval_count % lr_decay_eval_count == 0 and best_eval_count > 0:
+                if best_eval_count % cfg.TRAIN.LR_DECAY_EVAL_COUNT == 0 and best_eval_count > 0:
                     for param_group in optimizer.param_groups:
-                        param_group['lr'] *= lr_decay_gamma
+                        param_group['lr'] *= cfg.TRAIN.LR_DECAY_GAMMA
                         if use_tensorboard: writer.add_scalar('LR/train', param_group['lr'], it)
            
         it += 1
