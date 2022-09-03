@@ -6,28 +6,10 @@ import torchvision.transforms as transforms
 from model.triplet_match.model import TripletMatch
 from torch.utils.data import DataLoader
 import numpy as np
-#from PIL import Image
 import random
 
-from DomainToText.dataset import TrainDataset, EvalDataset
+from DomainToText.dataset import TrainDataset, EvalDataset, split
 from DomainToText.evaluation import do_eval
-
-def split(annotations_path, train_pctg=0.6, val_pctg=0.2, test_pctg=0.2):
-    assert np.isclose(train_pctg + val_pctg + test_pctg, 1.0)
-    train_txt, val_txt, test_txt = [], [], []
-    _, visual_domains, _ = next(os.walk(annotations_path))
-    for domain in visual_domains:
-        _, categories, _ = next(os.walk(annotations_path + domain))
-        for cat in categories:
-            _, _, files = next(os.walk(annotations_path + domain + '/' + cat))
-            N = len(files)
-            Ntrain, Nval = np.floor(N * train_pctg), np.ceil(N * val_pctg)
-            Nval += Ntrain
-            for i, file in enumerate(files):
-                if i < Ntrain: train_txt.append(domain + '/' + cat + '/' + file)
-                elif i < Nval: val_txt.append(domain + '/' + cat + '/' + file)
-                else: test_txt.append(domain + '/' + cat + '/' + file)
-    return train_txt, val_txt, test_txt
 
 static_idx_counter = 0
 def batch_loader(model, trainset, batch_size):
@@ -84,8 +66,6 @@ def train(use_tensorboard=True):
     trainset = TrainDataset(train_list)
     valset = EvalDataset(val_list)
 
-    #data_loader = DataLoader(valset, batch_size, shuffle=True, drop_last=True, pin_memory=True)
-
     model = TripletMatch()
     model.cuda()
 
@@ -99,9 +79,8 @@ def train(use_tensorboard=True):
     best_eval_metric = 0
     best_eval_count = 0
     early_stop = False
-    it = 0
-    try:
-      while epoch < n_epoch & and not early_stop:
+    epoch = 0
+    while epoch < n_epoch and not early_stop:
         # Train
         pos_images, pos_phrase, neg_images, neg_phrase = batch_loader(model, trainset, batch_size)
 
@@ -117,7 +96,7 @@ def train(use_tensorboard=True):
         if use_tensorboard: writer.add_scalar('train/lr', lr, epoch)
 
         # Validation
-        if epoch % val_every == val_every-1:
+        if epoch % val_epoch == val_epoch-1:
                 with torch.no_grad():
                     
                     i2p_result, p2i_result = do_eval(model, valset)
@@ -143,9 +122,7 @@ def train(use_tensorboard=True):
                         early_stop = True
                         break        
         epoch += 1
-
-    except KeyboardInterrupt:
-        writer.close()
+    writer.close()
 
 if __name__ == '__main__':
     train()

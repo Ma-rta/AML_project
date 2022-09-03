@@ -4,6 +4,23 @@ import torchvision.transforms as transforms
 from PIL import Image
 import random
 
+def split(annotations_path, train_pctg=0.6, val_pctg=0.2, test_pctg=0.2):
+    assert np.isclose(train_pctg + val_pctg + test_pctg, 1.0)
+    train_txt, val_txt, test_txt = [], [], []
+    _, visual_domains, _ = next(os.walk(annotations_path))
+    for domain in visual_domains:
+        _, categories, _ = next(os.walk(annotations_path + domain))
+        for cat in categories:
+            _, _, files = next(os.walk(annotations_path + domain + '/' + cat))
+            N = len(files)
+            Ntrain, Nval = np.floor(N * train_pctg), np.ceil(N * val_pctg)
+            Nval += Ntrain
+            for i, file in enumerate(files):
+                if i < Ntrain: train_txt.append(domain + '/' + cat + '/' + file)
+                elif i < Nval: val_txt.append(domain + '/' + cat + '/' + file)
+                else: test_txt.append(domain + '/' + cat + '/' + file)
+    return train_txt, val_txt, test_txt
+
 def build_transforms(is_train=True):
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])

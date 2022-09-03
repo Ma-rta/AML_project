@@ -1,3 +1,11 @@
+import os
+import torch
+import torch.utils.data
+from model.triplet_match.model import TripletMatch
+
+from DomainToText.dataset import EvalDataset, split
+from DomainToText.evaluation import do_eval
+
 def test():
     _, _, test_list = split('/content/AML_project/datalabels/')
     testset = EvalDataset(test_list)

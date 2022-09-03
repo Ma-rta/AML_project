@@ -97,7 +97,7 @@ def main():
     ########################### Computation of sources domain embeddings
     vec_dim = 256
     resnet101_texture_model = TripletMatch(vec_dim=vec_dim,distance='cos', img_feats=(2, 4))
-    model_path = '/metric_learning/BEST_checkpoint.pth'
+    model_path = '/content/finetuned/BEST_checkpoint.pth'
 
     resnet101_texture_model = resnet101_texture_model.cuda()
     resnet101_texture_model.load_state_dict(torch.load(model_path), strict=False)
