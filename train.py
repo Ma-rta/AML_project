@@ -96,10 +96,10 @@ def test():
     if os.path.exists('/metric_learning/BEST_checkpoint.pth'):
         model.load_state_dict(torch.load('/metric_learning/BEST_checkpoint.pth'), strict=False)
 
-    i2p_result, p2i_result = do_eval(model, testset)
-    eval_metric = i2p_result + p2i_result
-
-    print(f'mAP on test set: {eval_metric:.3f}')
+    with torch.no_grad():
+        i2p_result, p2i_result = do_eval(model, testset)
+        eval_metric = i2p_result + p2i_result
+        print(f'mAP on test set: {eval_metric:.3f}')
 
 if __name__ == '__main__':
     train()

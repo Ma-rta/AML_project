@@ -69,37 +69,3 @@ class EvalDataset(torch.utils.data.Dataset): # both for validation, test -> retu
 
     def __len__(self):
        return len(self.images)
-
-static_idx_counter = 0
-def random_batch(model, trainset, batch_size):
-        global static_idx_counter
-        # Random selection
-        imgs = []
-        for img in trainset.images:
-            imgs.append(torch.unsqueeze(trainset.img_transform(img), dim=0))
-        t_images = torch.Tensor(len(trainset), 3, 224, 224)
-        torch.cat(imgs, out=t_images)
-        pos_indices = [(x + static_idx_counter) % len(trainset) for x in range(batch_size)]
-        static_idx_counter = (static_idx_counter + batch_size) % len(trainset)
-        pos_images = []
-        pos_phrase = []
-        neg_images = []
-        neg_phrase = []
-        for idx in pos_indices:
-            pos_images.append(torch.unsqueeze(t_images[idx], dim=0).cpu())
-            pos_phrase.append(trainset.descr[idx])
-            pos_vd = trainset.visual_domain[idx]
-            i = None
-            while i is None or trainset.visual_domain[i] == pos_vd:
-                i = random.choice(range(len(trainset)))
-            neg_images.append(torch.unsqueeze(t_images[i], dim=0).cpu())
-            i = None
-            while i is None or trainset.visual_domain[i] == pos_vd:
-                i = random.choice(range(len(trainset)))
-            neg_phrase.append(trainset.descr[i])
-        
-        t_pos_images = torch.Tensor(batch_size, 3, 224, 224)
-        t_neg_images = torch.Tensor(batch_size, 3, 224, 224)
-        torch.cat(pos_images, out=t_pos_images)
-        torch.cat(neg_images, out=t_neg_images)
-        return t_pos_images, pos_phrase, t_neg_images, neg_phrase

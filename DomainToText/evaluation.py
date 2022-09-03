@@ -66,7 +66,7 @@ def mean_average_precision(rs):
     """
     return np.mean([average_precision(r) for r in rs])
 
-def compute_mAP(match_scores, gt_matrix, mode='i2p'):
+def retrieve_eval(match_scores, gt_matrix, mode='i2p'):
     """
     INPUT:
     - match_scores: [img_num x phrase_num], match_scores[i,j] = cosine_sim(emb(img_i), emb(phrase_j)) (shows how well img_i and phrase_j matches)
@@ -114,7 +114,7 @@ def do_eval (model, valset):
     gt_matrix = np.eye(len(valset))
     match_scores = predict(out_img, out_txt, valset)
 
-    i2p_result = compute_mAP(match_scores, gt_matrix, mode='i2p')
-    p2i_result = compute_mAP(match_scores, gt_matrix, mode='p2i') 
+    i2p_result = retrieve_eval(match_scores, gt_matrix, mode='i2p')
+    p2i_result = retrieve_eval(match_scores, gt_matrix, mode='p2i') 
     return i2p_result, p2i_result
 
