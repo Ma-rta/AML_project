@@ -46,9 +46,9 @@ def batch_loader(model, trainset, batch_size):
         return t_pos_images, pos_phrase, t_neg_images, neg_phrase
 
 def train(use_tensorboard=True):
-    n_epoch=100
+    n_step=150
     batch_size=16
-    val_epoch=20
+    val_step=15
     early_stop_eval_count = 40
 
     init_lr=0.00001
@@ -79,8 +79,8 @@ def train(use_tensorboard=True):
     best_eval_metric = 0
     best_eval_count = 0
     early_stop = False
-    epoch = 0
-    while epoch < n_epoch and not early_stop:
+    step = 0
+    while step < n_step and not early_stop:
         # Train
         pos_images, pos_phrase, neg_images, neg_phrase = batch_loader(model, trainset, batch_size)
 
@@ -91,24 +91,24 @@ def train(use_tensorboard=True):
         loss.backward()
         optimizer.step()
 
-        if use_tensorboard: writer.add_scalar('train/loss', loss, epoch)
+        if use_tensorboard: writer.add_scalar('train/loss', loss, step)
         lr = optimizer.param_groups[0]['lr']
-        if use_tensorboard: writer.add_scalar('train/lr', lr, epoch)
+        if use_tensorboard: writer.add_scalar('train/lr', lr, step)
 
         # Validation
-        if epoch % val_epoch == val_epoch-1:
+        if step % val_step == val_step-1:
                 with torch.no_grad():
                     
                     i2p_result, p2i_result = do_eval(model, valset)
                     eval_metric = i2p_result + p2i_result
                    
                     if eval_metric > best_eval_metric:
-                        print('best eval_metric',eval_metric, epoch)
+                        print('best eval_metric',eval_metric, step)
                         best_eval_metric = eval_metric
                         best_eval_count = 0
                         torch.save(model.state_dict(), 'finetuned/BEST_checkpoint.pth')
                     else:
-                        print('last eval_metric',eval_metric, epoch)
+                        print('last eval_metric',eval_metric, step)
                         best_eval_count += 1
                         torch.save(model.state_dict(), 'finetuned/LAST_checkpoint.pth')
 
@@ -121,7 +121,7 @@ def train(use_tensorboard=True):
                         print('EVAL: early stop triggered')
                         early_stop = True
                         break        
-        epoch += 1
+        step += 1
     writer.close()
 
 if __name__ == '__main__':
