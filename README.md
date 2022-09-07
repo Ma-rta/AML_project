@@ -1,5 +1,16 @@
 # Advanced Machine Learning Project - Domain-To-Text 
 
+### Assignment submission by:
+### - 301191 Lattanzi Marta
+### - 292453 Sabatini Claudia 
+
+## Finetuned model weights with the new dataset
+Create a folder *_'./finetuned/'_* inside the AML_project, download from the link below the file *_'BEST_checkpoint1.pth'_* and put it inside the created folder.
+
+Download link: https://drive.google.com/file/d/1usgiyZeo-VjpOMhD04n6pT0BjUgqPGto/view?usp=sharing
+
+# Original README
+
 Basic code to reproduce the baselines (point 1 of the project). 
 
 ## Dataset
